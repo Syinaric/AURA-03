@@ -1,64 +1,123 @@
 {
   "arm_geometry": {
-    "shoulder_height_m": 0.15,
-    "upper_arm_length_m": 0.20,
-    "lower_arm_length_m": 0.15,
+    "base_height_m": 0.0612,
+    "shoulder_height_m": 0.095,
+    "upper_arm_length_m": 0.12,
+    "lower_arm_length_m": 0.09,
     "wrist_offset_m": 0.0,
-    "gripper_length_m": 0.05,
+    "gripper_length_m": 0.0,
+    "gripper_width_m": 0.0,
     "base_to_shoulder_offset_x_m": 0.0,
-    "base_to_shoulder_offset_y_m": 0.0
+    "base_to_shoulder_offset_y_m": 0.0,
+    "notes": "Base: 61.2mm, Shoulder height: 95mm, Upper arm: 12cm, Lower arm: 9cm. Wrist axis perpendicular to elbow axis."
   },
   "joint_limits_deg": {
     "base": {
       "min": -180,
       "max": 180,
-      "home": 0
+      "home": 0,
+      "type": "MG996R",
+      "notes": "180-degree servo"
     },
     "shoulder": {
       "min": -90,
       "max": 90,
-      "home": 0
+      "home": 0,
+      "type": "MG996R",
+      "notes": "180-degree servo"
     },
     "elbow": {
       "min": 0,
       "max": 180,
-      "home": 90
+      "home": 90,
+      "type": "MG996R",
+      "notes": "180-degree servo"
     },
     "wrist": {
+      "type": "continuous",
+      "speed_range": [-100, 100],
+      "home": 0,
+      "notes": "9g continuous rotation servo - no angle limits, speed control only"
+    },
+    "gripper_yaw": {
       "min": -90,
       "max": 90,
-      "home": 0
+      "home": 0,
+      "type": "180deg",
+      "notes": "Gripper yaw rotation"
+    },
+    "gripper_pitch": {
+      "min": -90,
+      "max": 90,
+      "home": 0,
+      "type": "180deg",
+      "notes": "Gripper pitch tilt"
     }
   },
   "servo_config": {
     "base": {
+      "type": "MG996R",
       "center_us": 1500,
       "range_us": 1000,
       "direction": 1,
-      "angle_per_us": 0.09
+      "angle_per_us": 0.09,
+      "min_pulse_us": 500,
+      "max_pulse_us": 2500,
+      "gpio_pin": 2,
+      "notes": "Base rotation - MG996R 180°"
     },
     "shoulder": {
+      "type": "MG996R",
       "center_us": 1500,
       "range_us": 1000,
       "direction": 1,
-      "angle_per_us": 0.09
+      "angle_per_us": 0.09,
+      "min_pulse_us": 500,
+      "max_pulse_us": 2500,
+      "gpio_pin": 5,
+      "notes": "Shoulder pitch - MG996R 180°"
     },
     "elbow": {
+      "type": "MG996R",
       "center_us": 1500,
       "range_us": 1000,
       "direction": 1,
-      "angle_per_us": 0.09
+      "angle_per_us": 0.09,
+      "min_pulse_us": 500,
+      "max_pulse_us": 2500,
+      "gpio_pin": 18,
+      "notes": "Elbow pitch - MG996R 180°"
     },
     "wrist": {
+      "type": "continuous",
+      "stop_us": 1500,
+      "max_forward_us": 2000,
+      "max_reverse_us": 1000,
+      "speed_range": [-100, 100],
+      "gpio_pin": null,
+      "notes": "Wrist roll - 9g continuous rotation servo (speed control, not angle)"
+    },
+    "gripper_yaw": {
+      "type": "180deg",
       "center_us": 1500,
       "range_us": 1000,
       "direction": 1,
-      "angle_per_us": 0.09
+      "angle_per_us": 0.09,
+      "min_pulse_us": 500,
+      "max_pulse_us": 2500,
+      "gpio_pin": null,
+      "notes": "Gripper yaw rotation - 180° servo"
     },
-    "gripper": {
-      "open_us": 1200,
-      "closed_us": 1800,
-      "center_us": 1500
+    "gripper_pitch": {
+      "type": "180deg",
+      "center_us": 1500,
+      "range_us": 1000,
+      "direction": 1,
+      "angle_per_us": 0.09,
+      "min_pulse_us": 500,
+      "max_pulse_us": 2500,
+      "gpio_pin": null,
+      "notes": "Gripper pitch tilt - 180° servo"
     }
   },
   "mounting": {

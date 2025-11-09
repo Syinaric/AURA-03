@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Dither from './components/Dither'
+import TaskListCard from './components/TaskListCard'
 import WeatherCard from './components/WeatherCard'
 import SoilCard from './components/SoilCard'
 import PlantCard from './components/PlantCard'
@@ -118,13 +119,20 @@ function App() {
           </div>
         </header>
 
-        <div className="dashboard-grid">
-          <WeatherCard data={data.weather} loading={loading} />
-          <SoilCard data={data.soil} loading={loading} />
-          <PlantCard data={data.plants} loading={loading} />
-          <TasksCard tasks={data.tasks} loading={loading} />
-          <DecisionCard data={data} />
-          <ApiStatusCard status={status} lastUpdate={lastUpdate} />
+        <div className="dashboard-layout">
+          <div className="dashboard-left">
+            <TaskListCard tasks={data.tasks} data={data} />
+          </div>
+          <div className="dashboard-right">
+            <div className="dashboard-grid">
+              <WeatherCard data={data.weather} loading={loading} />
+              <SoilCard data={data.soil} loading={loading} />
+              <PlantCard data={data.plants} loading={loading} />
+              <TasksCard tasks={data.tasks} loading={loading} />
+              <DecisionCard data={data} />
+              <ApiStatusCard status={status} lastUpdate={lastUpdate} />
+            </div>
+          </div>
         </div>
 
         <footer className="app-footer">

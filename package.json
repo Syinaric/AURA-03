@@ -1,0 +1,10 @@
+{
+  "name": "aura-farm",
+  "version": "1.0.0",
+  "description": "A.U.R.A. FARM - Autonomous Utility Robotic Arm for farming",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "cd frontend && npm run dev"
+  }
+}
+

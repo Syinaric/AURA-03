@@ -103,11 +103,24 @@
   font-size: 1.1em;
 }
 
+.dashboard-layout {
+  display: flex;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.dashboard-left {
+  flex: 0 0 350px;
+}
+
+.dashboard-right {
+  flex: 1;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 25px;
-  margin-bottom: 30px;
 }
 
 .app-footer {
@@ -156,6 +169,14 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .dashboard-left {
+    flex: 1;
+  }
+  
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
