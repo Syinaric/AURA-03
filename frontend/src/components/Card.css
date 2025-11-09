@@ -1,0 +1,353 @@
+.card {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+}
+
+.card h2 {
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-size: 1.5em;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+  font-weight: 600;
+}
+
+.loading {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 30px;
+  font-style: italic;
+}
+
+/* Weather Card */
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.weather-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 3px solid #3498db;
+  transition: all 0.3s ease;
+}
+
+.weather-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #5dade2;
+}
+
+.weather-item h3 {
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.weather-item .value {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Soil Card */
+.soil-data {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.soil-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 3px solid #27ae60;
+  transition: all 0.3s ease;
+}
+
+.soil-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #52be80;
+}
+
+.soil-item h3 {
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.soil-item .value {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 5px;
+}
+
+.soil-item .status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-optimal {
+  background: rgba(39, 174, 96, 0.3);
+  color: #52be80;
+  border: 1px solid rgba(39, 174, 96, 0.5);
+}
+
+.status-warning {
+  background: rgba(241, 196, 15, 0.3);
+  color: #f7dc6f;
+  border: 1px solid rgba(241, 196, 15, 0.5);
+}
+
+.status-critical {
+  background: rgba(231, 76, 60, 0.3);
+  color: #ec7063;
+  border: 1px solid rgba(231, 76, 60, 0.5);
+}
+
+/* Plant Card */
+.plant-data {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.plant-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 3px solid #e67e22;
+  transition: all 0.3s ease;
+}
+
+.plant-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #f39c12;
+}
+
+.plant-item h3 {
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plant-item .value {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.health-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.health-good {
+  color: #27ae60;
+}
+
+.health-fair {
+  color: #f39c12;
+}
+
+.health-poor {
+  color: #e74c3c;
+}
+
+/* Tasks Card */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 3px solid #9b59b6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.task-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.task-item.priority-high {
+  border-left-color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.task-item.priority-medium {
+  border-left-color: #f39c12;
+  background: rgba(241, 196, 15, 0.1);
+}
+
+.task-item.priority-low {
+  border-left-color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-title {
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 5px;
+  font-size: 1.1em;
+}
+
+.task-description {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+.task-priority {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priority-high {
+  background: rgba(231, 76, 60, 0.3);
+  color: #ec7063;
+  border: 1px solid rgba(231, 76, 60, 0.5);
+}
+
+.priority-medium {
+  background: rgba(241, 196, 15, 0.3);
+  color: #f7dc6f;
+  border: 1px solid rgba(241, 196, 15, 0.5);
+}
+
+.priority-low {
+  background: rgba(52, 152, 219, 0.3);
+  color: #5dade2;
+  border: 1px solid rgba(52, 152, 219, 0.5);
+}
+
+/* Decision Card */
+.decision-logic {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.decision-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 3px solid #34495e;
+  transition: all 0.3s ease;
+}
+
+.decision-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #5d6d7e;
+}
+
+.decision-item h3 {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.decision-item .logic {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95em;
+  line-height: 1.8;
+}
+
+.decision-item .logic strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.decision-item .logic em {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+/* API Status Card */
+.api-status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.api-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.api-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.api-item .label {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.api-item .value {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.api-item .value.success {
+  color: #27ae60;
+  text-shadow: 0 0 8px rgba(39, 174, 96, 0.5);
+}
+
+.api-item .value.error {
+  color: #e74c3c;
+  text-shadow: 0 0 8px rgba(231, 76, 60, 0.5);
+}
+
