@@ -3,4 +3,5 @@ numpy
 pydantic
 ultralytics
 pyserial
+pynput
 

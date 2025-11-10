@@ -123,15 +123,16 @@ class ESP32Controller:
             self.connected = False
             return False
     
-    def set_servos(self, base_us, shoulder_us, elbow_us, wrist_us):
+    def set_servos(self, base_us, shoulder_us, elbow_us, wrist_us=1500):
         """
         Set all servo positions using microsecond values.
+        Note: Only 3 servos are used (base, shoulder, elbow). Wrist is optional.
         
         Args:
-            base_us: Base servo microseconds (900-2100)
-            shoulder_us: Shoulder servo microseconds (900-2100)
-            elbow_us: Elbow servo microseconds (900-2100)
-            wrist_us: Wrist servo microseconds (900-2100)
+            base_us: Base servo microseconds (900-2100) - GPIO 5 (D5)
+            shoulder_us: Shoulder servo microseconds (900-2100) - GPIO 18 (D18)
+            elbow_us: Elbow servo microseconds (900-2100) - GPIO 22 (D22)
+            wrist_us: Wrist servo microseconds (900-2100) - Optional, defaults to 1500
         
         Returns:
             bool: True if sent successfully, False otherwise
@@ -148,17 +149,23 @@ class ESP32Controller:
     def set_servos_from_us_list(self, us_list):
         """
         Set all servos from a list of microsecond values.
+        Accepts 3 or 4 values (base, shoulder, elbow, [wrist]).
         
         Args:
-            us_list: [base_us, shoulder_us, elbow_us, wrist_us]
+            us_list: [base_us, shoulder_us, elbow_us] or [base_us, shoulder_us, elbow_us, wrist_us]
         
         Returns:
             bool: True if sent successfully, False otherwise
         """
-        if len(us_list) != 4:
-            print(f"Error: Expected 4 servo values, got {len(us_list)}")
+        if len(us_list) == 3:
+            # Only 3 servos: base, shoulder, elbow
+            return self.set_servos(us_list[0], us_list[1], us_list[2], 1500)
+        elif len(us_list) == 4:
+            # 4 servos: base, shoulder, elbow, wrist
+            return self.set_servos(us_list[0], us_list[1], us_list[2], us_list[3])
+        else:
+            print(f"Error: Expected 3 or 4 servo values, got {len(us_list)}")
             return False
-        return self.set_servos(us_list[0], us_list[1], us_list[2], us_list[3])
     
     def read_response(self, timeout=0.5):
         """

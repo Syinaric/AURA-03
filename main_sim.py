@@ -1,6 +1,7 @@
 """
 Main simulation script for robot arm control.
-Uses webcam to detect bottles and executes harvesting sequence when button is pressed.
+Uses webcam with YOLOv8 to detect objects and executes tasks based on data-driven decisions.
+Tasks are generated from agricultural data thresholds and executed using computer vision.
 """
 import cv2
 import json
@@ -9,6 +10,14 @@ import sys
 import threading
 from detect import find_cup, detect_all_objects
 from kinematics import px_to_table, load_calibration
+
+# Try to import keyboard listener (for macOS compatibility)
+try:
+    from pynput import keyboard
+    KEYBOARD_LISTENER_AVAILABLE = True
+except ImportError:
+    KEYBOARD_LISTENER_AVAILABLE = False
+    print("Note: pynput not installed. Install with: pip install pynput")
 
 # Try to import ESP32 controller (optional)
 try:
@@ -112,67 +121,97 @@ def draw_ui(frame, bottle=None, all_detections=None):
     cv2.putText(vis, status, (10, 30), 
                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     
+    # Draw controls with better visibility
+    cv2.putText(vis, "PRESS 'G' TO GRAB | 'Q' TO QUIT", (10, vis.shape[0] - 30), 
+               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+    cv2.putText(vis, ">>> CLICK THIS WINDOW FIRST <<<", (10, vis.shape[0] - 10), 
+               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    
     return vis
 
 
 # Hardcoded pickup sequence positions
 # Servo microseconds: 1500 = center (90°), 900 = 0°, 2100 = 180°
-# Base: lower = left, higher = right
-# Shoulder: lower = arm up, higher = arm down
-# Elbow: lower = elbow up, higher = elbow down
-# Wrist: compensates to keep hand level
+# Base (D5): lower = left, higher = right
+# Shoulder (D18): lower = arm up, higher = arm down
+# Elbow (D22): lower = elbow up, higher = elbow down
+# Only 3 servos: base, shoulder, elbow (no wrist)
 
-HOME = [1500, 1500, 1500, 1500]
+HOME = [1500, 1500, 1500]  # [base, shoulder, elbow]
 
+# Hardcoded pickup sequence for object directly in front
 PICKUP_SEQUENCE = [
-    # 1. Approach position (above bottle, directly in front, arm extended forward)
-    {"name": "approach", "servos": [1500, 1700, 1700, 1500], "delay": 3.0},
+    # 1. Approach position (arm extended forward, above object)
+    {"name": "approach", "servos": [1500, 1600, 1800], "delay": 2.5},
     
-    # 2. Lower partway (smooth transition)
-    {"name": "lower_partway", "servos": [1500, 1300, 1900, 1500], "delay": 2.5},
+    # 2. Lower partway (smooth transition down)
+    {"name": "lower_partway", "servos": [1500, 1400, 2000], "delay": 2.0},
     
-    # 3. Lower to grab (shoulder down - REVERSED: lower microseconds = down)
-    {"name": "lower", "servos": [1500, 900, 2100, 1500], "delay": 3.0},
+    # 3. Lower to grab position (reach down to object)
+    {"name": "lower", "servos": [1500, 1200, 2100], "delay": 2.5},
     
-    # 4. Lift partway (smooth transition)
-    {"name": "lift_partway", "servos": [1500, 1300, 1900, 1500], "delay": 2.5},
+    # 4. Lift partway (smooth transition up - grabbing object)
+    {"name": "lift_partway", "servos": [1500, 1400, 2000], "delay": 2.0},
     
-    # 5. Lift up (shoulder up - REVERSED: higher microseconds = up)
-    {"name": "lift", "servos": [1500, 1700, 1700, 1500], "delay": 3.0},
+    # 5. Lift up (pick up object)
+    {"name": "lift", "servos": [1500, 1600, 1800], "delay": 2.5},
     
-    # 6. Move left partway (smooth rotation)
-    {"name": "move_left_partway", "servos": [1350, 1700, 1700, 1500], "delay": 2.5},
-    
-    # 7. Move left (rotate base left, keep arm position)
-    {"name": "move_left", "servos": [1200, 1700, 1700, 1500], "delay": 3.0},
-    
-    # 8. Lower partway (smooth transition)
-    {"name": "lower_drop_partway", "servos": [1200, 1300, 1900, 1500], "delay": 2.5},
-    
-    # 9. Lower to drop (shoulder down - REVERSED: lower microseconds = down)
-    {"name": "drop", "servos": [1200, 900, 2100, 1500], "delay": 3.0},
-    
-    # 10. Lift partway (smooth transition)
-    {"name": "release_partway", "servos": [1200, 1300, 1900, 1500], "delay": 2.5},
-    
-    # 11. Lift up (release cup)
-    {"name": "release", "servos": [1200, 1700, 1700, 1500], "delay": 3.0},
-    
-    # 12. Return base partway (smooth rotation)
-    {"name": "return_base_partway", "servos": [1350, 1700, 1700, 1500], "delay": 2.5},
-    
-    # 13. Return base to center
-    {"name": "return_base", "servos": [1500, 1700, 1700, 1500], "delay": 3.0},
-    
-    # 14. Return to home position (smooth transition)
-    {"name": "home_transition", "servos": [1500, 1600, 1600, 1500], "delay": 2.0},
-    
-    # 15. Return to home position
-    {"name": "home", "servos": HOME, "delay": 3.0},
+    # 6. Return to home position
+    {"name": "home", "servos": HOME, "delay": 2.5},
 ]
 
 # Flag to prevent multiple sequences running at once
 sequence_running = False
+
+# Global flag for keyboard input
+key_pressed = None
+key_lock = threading.Lock()
+
+def on_key_press(key):
+    """Handle keyboard press events."""
+    global key_pressed
+    try:
+        # Debug: print what key was received
+        print(f"\n[DEBUG] Key received: {key}, type: {type(key)}")
+        
+        if hasattr(key, 'char') and key.char:
+            with key_lock:
+                key_pressed = key.char.lower()
+                print(f"\n>>> ✅ Key pressed via listener: '{key_pressed}'")
+        elif key == keyboard.Key.space:
+            with key_lock:
+                key_pressed = ' '
+                print(f"\n>>> ✅ Space pressed via listener")
+        elif key == keyboard.Key.esc:
+            with key_lock:
+                key_pressed = 'q'
+                print(f"\n>>> ✅ ESC pressed via listener")
+        else:
+            print(f"[DEBUG] Key not recognized: {key}")
+    except Exception as e:
+        print(f"[ERROR] Exception in on_key_press: {e}")
+
+def on_key_release(key):
+    """Handle keyboard release events."""
+    pass
+
+# Start keyboard listener in background thread
+keyboard_listener = None
+if KEYBOARD_LISTENER_AVAILABLE:
+    try:
+        keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release, suppress=False)
+        keyboard_listener.start()
+        print("✅ Background keyboard listener started (works even when window not focused)")
+        print("   NOTE: On macOS, you may need to grant Accessibility permissions")
+        print("   System Settings > Privacy & Security > Accessibility > Terminal (or Python)")
+        time.sleep(0.5)  # Give listener time to start
+    except Exception as e:
+        print(f"⚠️  Could not start keyboard listener: {e}")
+        print("   Falling back to OpenCV window input only")
+        KEYBOARD_LISTENER_AVAILABLE = False
+else:
+    print("⚠️  pynput not available - using OpenCV window input only")
+    print("   Install with: pip install pynput")
 
 def execute_harvesting_sequence(bottle):
     """
@@ -206,8 +245,8 @@ def execute_harvesting_sequence(bottle):
         
         for i, step in enumerate(PICKUP_SEQUENCE, 1):
             print(f"\n[{i}/{len(PICKUP_SEQUENCE)}] {step['name'].upper()}")
-            print(f"  Servos: Base={step['servos'][0]}us, Shoulder={step['servos'][1]}us, "
-                  f"Elbow={step['servos'][2]}us, Wrist={step['servos'][3]}us")
+            print(f"  Servos: Base(D5)={step['servos'][0]}us, Shoulder(D18)={step['servos'][1]}us, "
+                  f"Elbow(D22)={step['servos'][2]}us")
             
             # Send command to ESP32 if connected
             if USE_ESP32 and esp32_controller:
@@ -219,7 +258,7 @@ def execute_harvesting_sequence(bottle):
             else:
                 print(f"  (Simulation mode - no ESP32)")
             
-            # Wait for movement (shorter delay to prevent lag)
+            # Wait for movement
             time.sleep(step['delay'])
         
         print(f"\n{'='*60}")
@@ -260,21 +299,49 @@ while True:
     if not PRINT_JSON_ONLY:
         cv2.imshow("A.U.R.A. FARM - Bottle Detection", vis)
     
-    k = cv2.waitKey(1) & 0xFF
+    # Check for keyboard input from both OpenCV window and background listener
+    k = None
     
-    if k == ord('q'):
-        break
+    # Method 1: Background keyboard listener (works without window focus) - check first
+    if KEYBOARD_LISTENER_AVAILABLE:
+        with key_lock:
+            if key_pressed:
+                k = key_pressed
+                key_pressed = None  # Reset after reading
+                print(f"\n>>> ✅ Using key from listener: '{k}'")
     
-    if k == ord('g'):
-        # Grab/harvest command - run hardcoded sequence regardless of bottle detection
-        print("\n🔄 Initiating harvesting sequence...")
-        print("   (Running hardcoded sequence - bottle detection is for display only)")
-        # Use a dummy bottle dict for display purposes
-        dummy_bottle = {"cx": 320, "cy": 240, "bbox": (280, 200, 80, 80), "confidence": 1.0}
-        execute_harvesting_sequence(dummy_bottle)
+    # Method 2: OpenCV window input (requires window focus) - fallback
+    if not k:
+        cv_key = cv2.waitKey(1) & 0xFF
+        if cv_key != 255 and cv_key != 0:
+            try:
+                k = chr(cv_key).lower()
+                print(f"\n>>> ✅ Key from OpenCV window: '{k}'")
+            except:
+                pass
+    
+    # Process key press
+    if k:
+        if k == 'q':
+            print("\nQuitting...")
+            break
+        
+        if k == 'g':
+            # Grab/harvest command - run hardcoded sequence regardless of bottle detection
+            print("\n" + "="*60)
+            print("🔄 INITIATING HARVESTING SEQUENCE...")
+            print("="*60)
+            print("   (Running hardcoded sequence - bottle detection is for display only)")
+            # Use a dummy bottle dict for display purposes
+            dummy_bottle = {"cx": 320, "cy": 240, "bbox": (280, 200, 80, 80), "confidence": 1.0}
+            execute_harvesting_sequence(dummy_bottle)
 
 cap.release()
 cv2.destroyAllWindows()
+
+# Stop keyboard listener
+if keyboard_listener:
+    keyboard_listener.stop()
 
 # Disconnect ESP32 if connected
 if esp32_controller:
